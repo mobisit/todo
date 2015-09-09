@@ -1,0 +1,28 @@
+<div class="modal">
+  <!-- Modal header bar -->
+  <ion-header-bar class="bar-secondary">
+    <h1 class="title">New Task</h1>
+    <button class="button button-clear button-positive" ng-click="closeNewTask()">Cancel</button>
+  </ion-header-bar>
+
+  <!-- Modal content area -->
+  <ion-content>
+
+    <form name="form" >
+      <div class="list">
+        <label class="item item-input">
+          <input type="text" placeholder="What do you need to do?" ng-model="title">
+        </label>
+      </div>
+      <div class="padding">
+        <ion-button ng-show="action == 'add'" ng-init="saveEmpty(title)" class="button button-block button-positive" ng-click="addTask(title)">
+              Add
+        </ion-button>
+        <ion-button ng-show="action == 'change'" class="button button-block button-positive" ng-click="editTask(title)">
+              Edit
+        </ion-button
+      </div>
+    </form>
+
+  </ion-content>
+</div>

@@ -1,0 +1,44 @@
+<ion-side-menus>
+  <!-- Center content -->
+  <ion-side-menu-content>
+    <ion-header-bar class="bar-dark">
+      <button class="button button-icon" ng-click="toggleProjects()">
+        <i class="icon ion-navicon"></i>
+      </button>
+      <h1 class="title">{{activeProject.title}}</h1>
+      <!-- New Task button-->
+      <button class="button button-icon" ng-click="newTask()">
+        <i class="icon ion-compose"></i>
+      </button>
+    </ion-header-bar>
+    <ion-content scroll="true">
+      <!-- our list and list items -->
+      <ion-list show-delete="false" show-reorder="false" can-swipe="true">
+        <ion-item ng-repeat="task in activeProject.tasks">
+          {{task.title}}
+          <ion-option-button class="button-assertive" ng-click="activeProject.tasks.splice($index, 1)">Delete</ion-option-button>
+          <ion-option-button class="button-positive" ng-click="showEditTask(task)">Edit</ion-option-button>
+          <ion-reorder-button class="ion-navicon" on-reorder="moveTask(task, $fromIndex, $toIndex)">
+    </ion-reorder-button>
+        </ion-item>
+      </ion-list>
+    </ion-content>
+  </ion-side-menu-content>
+
+  <!-- Left menu -->
+  <ion-side-menu side="left">
+    <ion-header-bar class="bar-dark">
+      <h1 class="title">Projects</h1>
+      <button class="button button-icon ion-plus" ng-click="newProject()">
+      </button>
+    </ion-header-bar>
+    <ion-content scroll="true">
+      <ion-list>
+        <ion-item ng-repeat="project in projects" ng-click="selectProject(project, $index)" ng-class="{active: activeProject == project}">
+          {{project.title}}
+        </ion-item>
+      </ion-list>
+    </ion-content>
+  </ion-side-menu>
+
+</ion-side-menus>
