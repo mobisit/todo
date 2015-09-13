@@ -2,12 +2,14 @@
 <widget id="com.ionicframework.todo808764" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
   <name>todo</name>
   <description>
-        An Ionic Framework and Cordova project.
+        Group Task Manager
     </description>
-  <author email="hi@ionicframework" href="http://ionicframework.com/">
+  <author email="peterchoi@me.com" href="http://www.wholics.com/">
       Ionic Framework Team
     </author>
   <content src="index.html"/>
+  <allow-intent href="*.firebaseio.com" />
+  <allow-intent href="auth.firebase.com" />
   <access origin="*"/>
   <preference name="webviewbounce" value="false"/>
   <preference name="UIWebViewBounce" value="false"/>

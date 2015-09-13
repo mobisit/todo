@@ -5,7 +5,7 @@
       <button class="button button-icon" ng-click="toggleProjects()">
         <i class="icon ion-navicon"></i>
       </button>
-      <h1 class="title">{{activeProject.title}}</h1>
+      <h1 class="title">{{activeProject.name}}</h1>
       <!-- New Task button-->
       <button class="button button-icon" ng-click="newTask()">
         <i class="icon ion-compose"></i>
@@ -13,16 +13,45 @@
     </ion-header-bar>
     <ion-content scroll="true">
       <!-- our list and list items -->
-      <ion-list show-delete="false" show-reorder="false" can-swipe="true">
-        <ion-item ng-repeat="task in activeProject.tasks">
-          {{task.title}}
-          <ion-option-button class="button-assertive" ng-click="activeProject.tasks.splice($index, 1)">Delete</ion-option-button>
-          <ion-option-button class="button-positive" ng-click="showEditTask(task)">Edit</ion-option-button>
-          <ion-reorder-button class="ion-navicon" on-reorder="moveTask(task, $fromIndex, $toIndex)">
-    </ion-reorder-button>
-        </ion-item>
-      </ion-list>
+
+      <div class="list card" ng-repeat="task in tasks">
+        <div class="item">
+          <p>
+            <i class="icon ion-ios-checkmark" ng-show="task.completed"></i> {{task.name}}
+          </p>
+          <p>
+            <a href="#" class="subdued">{{task.description}}</a>
+          </p>
+        </div>
+
+        <div class="item tabs tabs-secondary tabs-icon-left">
+          <a class="tab-item" href="#" ng-click="showEditTask(task)">
+            <i class="icon ion-ios-compose-outline"></i>
+            Edit
+          </a>
+          <a class="tab-item" href="#" ng-click="tasks.$remove(task)">
+            <i class="icon ion-ios-trash-outline"></i>
+            Delete
+          </a>
+          <a class="tab-item" href="#">
+            <i class="icon ion-share"></i>
+            Delegate
+          </a>
+        </div>
+      </div>
     </ion-content>
+    <!--<ion-footer-bar align-title="left" class="bar-dark">
+      <div ng-hide="authData" ng-click="login()">
+        <button class="item">
+        Log In with Facebook
+        </button>
+      </div>
+      <div class="card" ng-show="authData">
+        <div class="item item-text-wrap">
+          Hello {{authData.facebook.displayName}}!
+        </div>
+      </div>
+    </ion-footer-bar>-->
   </ion-side-menu-content>
 
   <!-- Left menu -->
@@ -35,7 +64,7 @@
     <ion-content scroll="true">
       <ion-list>
         <ion-item ng-repeat="project in projects" ng-click="selectProject(project, $index)" ng-class="{active: activeProject == project}">
-          {{project.title}}
+          {{project.name}}
         </ion-item>
       </ion-list>
     </ion-content>

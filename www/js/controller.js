@@ -1,18 +1,27 @@
 angular.module('todo.controllers', [])
-.controller('TodoController', ['$scope', '$timeout', '$ionicModal', 'Projects', '$ionicSideMenuDelegate', '$ionicListDelegate',
-  function($scope, $timeout, $ionicModal, Projects, $ionicSideMenuDelegate, $ionicListDelegate){
+
+.controller('TodoController', ['$scope', '$ionicModal', 'ProjectManager', '$ionicSideMenuDelegate', '$ionicListDelegate', 'Auth',
+  function($scope, $ionicModal, ProjectManager, $ionicSideMenuDelegate, $ionicListDelegate, Auth){
+  //$scope.login = Auth.login();
+  /*Auth.onAuth(function(authData){
+    $scope.authData = authData;
+  });*/
+
   // Load or initialize projects
-  $scope.projects = Projects.all();
+  $scope.projects = ProjectManager.projects();
 
   // Grab the last active, or the first project
-  $scope.activeProject = $scope.projects[Projects.getLastActiveIndex()];
+//  $scope.activeProject = $scope.projects[Projects.getLastActiveIndex()];
+  //$scope.activeProject = $scope.projects[0];  // TODO: revise
 
   // Called to select the given project
   $scope.selectProject = function(project, index){
     $scope.activeProject = project;
-    Projects.setLastActiveIndex(index);
+    //Projects.setLastActiveIndex(index);
+    $scope.tasks = ProjectManager.tasksForProject(project);
     $ionicSideMenuDelegate.toggleLeft(false);
   };
+
 
   // Create task dialog modal
   $ionicModal.fromTemplateUrl('task-dialog.html', function(modal) {
@@ -30,46 +39,43 @@ angular.module('todo.controllers', [])
     animation: 'slide-in-up'
   });
 
-  // Called when the form is submitted
-  $scope.createTask = function(task) {
-    if(!$scope.activeProject || !task){
-      return;
-    }
-    $scope.activeProject.tasks.push({
-      title: task.title
-    });
-    $scope.leaveTaskDialog();
-
-    // inefficient, but save all the projects
-    Projects.save($scope.projects);
-
-    task.title = "";
-  };
-
   // Called when the project dialog is submitted
   $scope.createProject = function(projectTitle){
-    var newProject = Projects.newProject(projectTitle);
-    $scope.projects.push(newProject);
-    Projects.save($scope.projects);
-    $scope.selectProject(newProject, $scope.projects.length-1);
-    $scope.projectModal.hide();
+    //var newProject = Projects.newProject(projectTitle);
+    var newProjectId = ProjectManager.addProject(projectTitle);
+    var newProject = $scope.projects.$getRecord(newProjectId);
+    var index = $scope.projects.length-1;
+    $scope.selectProject($scope.projects[index], index);
+    $scope.leaveProjectDialog();
 
     projectTitle = "";
   };
   
-  // Used to cache the empty form for Edit Dialog
-  $scope.saveEmpty = function(title) {
-    $scope.title = angular.copy(title);
+  $scope.editTask = function(task){
+    if(!$scope.activeProject || !task){
+      return;
+    }
+    $scope.tasks.$save(task)
+    $scope.leaveTaskDialog();
   };
 
-  $scope.addTask = function(title){
-    var newTask = {};
-    newTask.title = title;
-    createTask(newTask);
+  // Used to cache the empty form for Edit Dialog
+  $scope.saveEmpty = function(task) {
+    $scope.task = angular.copy(task);
+  };
+
+  $scope.addTask = function(task){
+    if(!$scope.activeProject || !task){
+      return;
+    }
+    ProjectManager.addTask($scope.activeProject, task);
+    
+    $scope.leaveTaskDialog();
   };
 
   // Open task dialog modal
   $scope.newTask = function() {
+    $scope.task = {name:"", description:""};
     $scope.showTaskDialog('add');
   };
 
@@ -84,41 +90,15 @@ angular.module('todo.controllers', [])
 
   // Open project dialog modal
   $scope.newProject = function() {
-    $scope.projectModal.show();
+    $scope.projectTitle = "";
+    $scope.showProjectDialog('add');
   };
 
   // Close the new task modal
   $scope.closeNewProject = function() {
-    $scope.projectModal.hide();
+    $scope.leaveProjectDialog();
   };
 
-/*
-  // Define item buttons
-  $scope.itemButtons = [{
-    text: 'Delete',
-    type: 'button-assertive',
-    onTap: function(task) {
-      $scope.removeTask(task);
-    }
-  }, {
-    text: 'Edit',
-    type: 'button-calm',
-    onTap: function(task) {
-      $scope.showEditTask(task);
-    }
-  }];
-*/
-/*
-  $scope.removeTask = function(task) {
-    // Search & Destroy item from list
-    if(!$scope.activeProject || !task){
-      return;
-    }
-    $scope.activeProject.tasks.splice($scope.list.indexOf(task), 1);
-    // Save list in factory
-    Projects.save($scope.projects);
-  }
-*/
   $scope.showTaskDialog = function(action) {
     $scope.action = action;
     $scope.taskModal.show();
@@ -134,51 +114,37 @@ angular.module('todo.controllers', [])
       scope: $scope,
       animation: 'slide-in-up'
     });
+//    $ionicListDelegate.closeOptionButtons();
   };
 
-  $scope.moveTask = function(task, fromIndex, toIndex){
-    $scope.activeProject.tasks.splice(fromIndex, 1);
-    $scope.activeProject.tasks.splice(toIndex, 0, task);
+  $scope.showProjectDialog = function(action) {
+    $scope.action = action;
+    $scope.projectModal.show();
+  };
+
+  $scope.leaveProjectDialog = function() {
+    // Remove dialog 
+    $scope.projectModal.remove();
+    // Reload modal template to have cleared form
+    $ionicModal.fromTemplateUrl('project-dialog.html', function(modal) {
+      $scope.projectModal = modal;
+    }, {
+      scope: $scope,
+      animation: 'slide-in-up'
+    });
   };
 
   $scope.showEditTask = function(task) {
-
-    // Remember edit item to change it later
-    $scope.tmpEditTask = task;
-
-    // Preset form values
-    $scope.title = task.title;
+    $scope.task = task;
     // Open dialog
     $scope.showTaskDialog('change');
   };
 
-  $scope.editTask = function(title){
-    var item = {};
-    if(!$scope.activeProject || !title){
-      return;
+  $scope.projects.$loaded(function() {
+    if ($scope.projects.length === 0) {
+      $scope.createProject("Today");
     }
-
-    item.title = title;
-
-    var editIndex = $scope.activeProject.tasks.indexOf($scope.tmpEditTask);
-
-    $scope.activeProject.tasks[editIndex] = item;
-    Projects.save($scope.projects);
-
-    $scope.leaveTaskDialog();
-  };
-
-  // Try to create the first project, make sure to defer 
-  // this by using $timeout so everything is initialized properly
-  $timeout(function(){
-    if($scope.projects.length == 0){
-      while(true){
-        var projectTitle = prompt('Your first project title:');
-        if(projectTitle){
-          createProject(projectTitle);
-          break;
-        }
-      }
-    }
+    $scope.selectProject($scope.projects[0],0);
   });
+
 }]);

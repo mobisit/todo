@@ -10,15 +10,24 @@
 
     <form name="form" >
       <div class="list">
+        <div class="item item-checkbox">
+          <label class="checkbox">
+           <input type="checkbox" ng-model="task.completed">
+         </label>
+         Mark as Completed
+       </div>
         <label class="item item-input">
-          <input type="text" placeholder="What do you need to do?" ng-model="title">
+          <input type="text" placeholder="What do you need to do?" ng-model="task.name">
+        </label>
+        <label class="item item-input">
+          <textarea placeholder="Details" ng-model="task.description"></textarea>
         </label>
       </div>
       <div class="padding">
-        <ion-button ng-show="action == 'add'" ng-init="saveEmpty(title)" class="button button-block button-positive" ng-click="addTask(title)">
+        <ion-button ng-show="action == 'add'" ng-init="saveEmpty(task)" class="button button-block button-positive" ng-click="addTask(task)">
               Add
         </ion-button>
-        <ion-button ng-show="action == 'change'" class="button button-block button-positive" ng-click="editTask(title)">
+        <ion-button ng-show="action == 'change'" class="button button-block button-positive" ng-click="editTask(task)">
               Edit
         </ion-button
       </div>

@@ -4,31 +4,88 @@
  * from local storage, and also lets us save and load the 
  * last active project index.
  */
-angular.module('todo.services', [])
-.factory('Projects', function(){
+angular.module('todo.services', ["firebase"])
+.factory("Auth", function($firebaseAuth) {
+  var usersRef = new Firebase("https//todobyionic.firebaseio.com/users");
+  var auth = $firebaseAuth(usersRef);
   return {
-    all: function(){
-      var projectString = window.localStorage['projects'];
-      if(projectString){
-        return angular.fromJson(projectString);
-      }
-      return [];
+    login: function() {
+      auth.$authWithOAuthRedirect("facebook").then(function(authData) {
+        // User successfully logged in
+      }).catch(function(error) {
+        if (error.code === "TRANSPORT_UNAVAILABLE") {
+          auth.$authWithOAuthPopup("facebook").then(function(authData) {
+            // User successfully logged in. We can log to the console
+            // since we’re using a popup here
+            console.log(authData);
+          });
+        } else {
+          // Another error occurred
+          console.log(error);
+        }
+      });
     },
-    save: function(projects){
-      window.localStorage['projects'] = angular.toJson(projects);
+    onAuth: function(authenticate){
+        auth.$onAuth(function(authData) {
+          if (authData === null) {
+            console.log("Not logged in yet");
+          } else {
+            console.log("Logged in as", authData.uid);
+          }
+          authenticate(authData); 
+        });
+    }
+  }
+})
+.factory("ProjectManager", function($firebaseArray){
+  var ref = new Firebase("https://todobyionic.firebaseio.com");
+
+  return {
+    projects: function(){
+      var projectsRef = ref.child("projects");
+      return $firebaseArray(projectsRef);
     },
-    newProject: function(projectTitle){
-      // Add a new project
-      return {
-        title: projectTitle,
-        tasks: []
-      };
+    tasks: function(){
+      var tasksRef = ref.child("tasks");
+      return $firebaseArray(tasksRef);
     },
-    getLastActiveIndex: function(){
-      return parseInt(window.localStorage['lastActiveProject']) || 0;
+    addProject: function(projectName){
+      var projectsRef = ref.child("projects");
+      var newProjectRef = projectsRef.push({
+        name: projectName,
+        archived: false
+      });
+      return newProjectRef.key();
     },
-    setLastActiveIndex: function(index){
-      window.localStorage['lastActiveProject'] = index;
+    editProject: function(recordOrIndex){
+      return projects.$save(recordOrIndex);
+    },
+    deleteProject: function(recordOrIndex){
+      return projects.$remove(recordOrIndex);
+    },
+    tasksForProject: function(projectRecord){
+      var query = ref.child("tasks").orderByChild("project").equalTo(projectRecord.$id);
+      return $firebaseArray(query);
+    },
+    addTask: function(projectRecord, task){
+      var projectId = projectRecord.$id;
+      var tasksRef = ref.child("tasks");
+      var newTaskRef = tasksRef.push({
+        name: task.name,
+        description: task.description,
+        completed: false,
+        project: projectId
+      }, function(error){
+        if(error){
+          // Handle Error 
+        } else {
+          /*var projectTasksRef = ref.child("projects").child(projectId).child("tasks");
+          var newTaskId = newTaskRef.key();
+          projectTasksRef.push({
+            newTaskId: true
+          });*/
+        }
+      });
     }
   }
 });
